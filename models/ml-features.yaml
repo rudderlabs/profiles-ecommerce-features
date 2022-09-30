@@ -1,0 +1,165 @@
+resources:
+  - name: domain_profile
+    entity_key: user
+    resource_type: feature_table_model
+    resource_spec:
+      validity_time: 24h # 1 day
+      id_stitching:
+        main_id_type: main_id
+        inputs:
+          # For every input model, we need to know the column expression which gives identity of each row in the column.
+          - name: identifies_1
+            ref:
+              table: ANALYTICS_DB.DATA_APPS_SIMULATED.identifies
+              timestamp_col: timestamp
+              ids:
+                - sql: "user_id"
+                  type: user_id
+                - sql: "properties_email"
+                  type: email
+                - sql: "anonymous_id"
+                  type: anonymous_id
+          - name: tracks_1
+            ref:
+              table: tracks
+              timestamp_col: timestamp
+              ids:
+                - sql: "user_id"
+                  type: user_id
+                - sql: "anonymous_id"
+                  type: anonymous_id
+          - name: checkout_steps_1
+            ref:
+              table: CHECKOUT_STEP_COMPLETED
+              timestamp_col: timestamp
+              ids:
+                - sql: "user_id"
+                  type: user_id
+          - name: product_added_1
+            ref:
+              table: PRODUCT_ADDED
+              timestamp_col: timestamp
+              ids:
+                - sql: "user_id"
+                  type: user_id
+          - name: order_completed_1
+            ref:
+              table: ORDER_COMPLETED
+              timestamp_col: timestamp
+              ids:
+                - sql: "user_id"
+                  type: user_id
+
+          - name: checkout_step_completed_1
+            ref:
+              table: checkout_step_completed
+              timestamp_col: timestamp
+              ids:
+                - sql: "user_id"
+                  type: user_id
+      features:
+#        - tablefeature:
+#            name: country_latest
+#            table: identifies_1
+#            value: first_value(properties_country) ignore nulls over(partition by main_id order by timestamp desc)
+
+#        - tablefeature:
+#            name: state
+#            table: identifies_1
+#            value: (select properties_state from identifies_1 where main_id is not null and properties_state is not null and properties_state != '' group by main_id, properties_state, timestamp order by  timestamp  desc limit 1)
+#
+        - tablefeature:
+            name: has_mobile_app
+            table: identifies_1
+            value: max(case when lower(context_device_type) in ('android', 'ios') then 1 else 0 end)
+
+        - tablefeature:
+            name: campaign_source
+            table: identifies_1
+            value: (array_agg(distinct context_campaign_source ))
+
+        - tablefeature:
+            name: is_active_on_website
+            table: identifies_1
+            value: max(case when lower(CONTEXT_DEVICE_TYPE) like '%pc' then 1 else 0 end)
+
+        - tablefeature:
+            name: payment_methods
+            table: checkout_steps_1
+            value: (array_agg(distinct properties_payment_method))
+
+#        - tablefeature:
+#            name: days_since_account_creation
+#            table: identifies_1
+#            value: least(date(current_date()), timestamp) - date(first_value(timestamp) over (partition by main_id order by timestamp asc))
+#
+        - tablefeature:
+            name: total_carts
+            table: product_added_1
+            value: (select count(distinct properties_cart_id) from product_added_1 where main_id!= '' and main_id IS NOT NULL and properties_cart_id IS NOT NULL)
+
+        - tablefeature:
+            name: total_products_added_to_cart
+            table: product_added_1
+            value: count(*)
+
+        - tablefeature:
+            name: items_purchased_ever
+            table: order_completed_1
+            value: (select array_agg(distinct t.value['product_id']) from order_completed_1, TABLE(FLATTEN(parse_json(properties_products))) t)
+
+        - tablefeature:
+            name: categories_purchased_ever
+            table: order_completed_1
+            value: (select array_agg(distinct t.value['category_l1']) from order_completed_1, TABLE(FLATTEN(parse_json(properties_products))) t)
+
+#        - tablefeature:
+#            name: highest_spent_category
+#            table: order_completed_1
+#            value: (with cte_category_vs_spending as (
+#                      select t.value['category_l1'] as category_l1, sum(t.value['price']) as amount_spent
+#                      from order_completed_1, TABLE(FLATTEN(parse_json(properties_products))) t
+#                      where main_id IS NOT NULL
+#                      group by main_id, category_l1
+#                    )
+#                    select category_l1 from cte_category_vs_spending)
+#
+        - tablefeature:
+            name: avg_transaction_value
+            table: order_completed_1
+            value: avg(properties_total)
+
+        - tablefeature:
+            name: avg_unit_per_transaction
+            table: order_completed_1
+            value: avg(array_size(parse_json(properties_products)))
+
+        - tablefeature:
+            name: median_transaction_value
+            table: order_completed_1
+            value: median(properties_total)
+
+        - tablefeature:
+            name: total_amt_spent
+            table: order_completed_1
+            value: sum(properties_total)
+
+#        - tablefeature:
+#            name: last_transaction
+#            table: order_completed_1
+#            value: (select top 1 properties_total from order_completed order by case when properties_total is not null then 2 else 1 end desc, timestamp desc)
+
+        - tablefeature:
+            name: highest_transaction_value
+            table: order_completed_1
+            value: max(properties_total)
+
+        - tablefeature:
+            name: total_transactions
+            table: order_completed_1
+            value: count(*)
+
+        - tablefeature:
+            name: has_credit_card
+            table: checkout_step_completed_1
+            value: max(case when lower(properties_payment_method) in ('MasterCard') then 1 else 0 end)
