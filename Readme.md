@@ -1,6 +1,6 @@
 # E-Commerce Feature Store Template
 
-#### WHT version: 0.1.0
+#### WHT version: [0.1.0](https://drive.google.com/drive/folders/1aFAHfIRnFXf9AIFr9SEnROiwOX9TAG3N)
 
 
 ## How to Use
