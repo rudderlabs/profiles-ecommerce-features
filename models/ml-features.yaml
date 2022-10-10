@@ -7,10 +7,10 @@ models:
       main_id_type: main_id
       edge_sources:
         - input: identifies_1
-#        - input: tracks_1
-#        - input: product_added_1
-#        - input: order_completed_1
-#        - input: checkout_steps_1
+        - input: tracks_1
+        - input: product_added_1
+        - input: order_completed_1
+        - input: checkout_step_completed_1
   - name: domain_profile
     model_type: feature_table_model
     model_spec:
@@ -85,7 +85,7 @@ models:
         - tablefeature:
             name: payment_methods
             ref:
-              input: checkout_steps_1
+              input: checkout_step_completed_1
             filter: main_id is not null
             value: (array_agg(distinct properties_payment_method))
 
@@ -163,3 +163,126 @@ models:
         - feature:
             name: age_in_years
             value: age_from_dob
+
+# Total carts
+        - tablefeature:
+            name: total_carts
+            ref:
+              input: product_added_1
+            filter: main_id != '' and main_id IS NOT NULL and properties_cart_id IS NOT NULL
+            value: count(distinct properties_cart_id)
+
+# Total products added to the cart
+        - tablevar:
+            name: total_products
+            ref:
+              input: product_added_1
+            filter: main_id != '' and main_id IS NOT NULL
+            value: count(*)
+
+        - feature:
+            name: total_products_added_to_cart
+            value: total_products
+
+# Days since last added
+        - tablevar:
+            name: max_timestamp_for_cart_add
+            ref:
+              input: product_added_1
+            filter: timestamp is not null and timestamp != '' and main_id is not null
+            value: max(timestamp)
+
+        - feature:
+            name: days_since_last_added
+            value: datediff(day, date(max_timestamp_for_cart_add), TO_DATE('2022.09.23', 'YYYY.MM.DD'))
+
+# Items Purchased ever
+        - tablefeature:
+            name: flat_properties_products
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: (select array_agg(distinct t.value['product_id']) from order_completed_1, TABLE(FLATTEN(parse_json(properties_products))) t)
+
+# Categories Purchased ever
+        - tablefeature:
+            name: categories_purchased_ever
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: (select array_agg(distinct t.value['category_l1']) from order_completed_1, TABLE(FLATTEN(parse_json(properties_products))) t)
+
+# Average transaction value
+        - tablefeature:
+            name: avg_transaction_value
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: avg(properties_total)
+
+# Average unit per transaction
+        - tablefeature:
+            name: avg_unit_per_transaction
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: avg(array_size(parse_json(properties_products)))
+
+# Median transaction value
+        - tablefeature:
+            name: median_transaction_value
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: median(properties_total)
+
+# Total amount spent
+        - tablefeature:
+            name: total_amt_spent
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: sum(properties_total)
+
+# Highest transaction value
+        - tablefeature:
+            name: highest_transaction_value
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: max(properties_total)
+
+# Total transactions
+        - tablefeature:
+            name: total_transactions
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: count(*)
+
+# Has credit card?
+        - tablefeature:
+            name: has_credit_card
+            ref:
+              input: checkout_step_completed_1
+            filter: main_id is not null
+            value: max(case when lower(properties_payment_method) in ('MasterCard') then 1 else 0 end)
+
+# Last transaction
+        - tablevar:
+            name: max_timestamp_for_txn
+            ref:
+              input: order_completed_1
+            filter: properties_total is not null
+            value: max(timestamp)
+
+        - tablevar:
+            name: max_timestamp_txn
+            ref:
+              input: order_completed_1
+            filter: timestamp = max_timestamp_for_txn and main_id is not null
+            value: max(properties_total)
+
+        - feature:
+            name: last_transaction
+            value: max_timestamp_txn
