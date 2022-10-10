@@ -1,7 +1,7 @@
 # Project name
 name: feature_store_template
 # Project's yaml schema version
-schema_version: 2
+schema_version: 4
 # WH Connection Profile to use.
 profile: kuldeep_test_fs
 

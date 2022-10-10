@@ -1,0 +1,48 @@
+inputs:
+  - name: identifies_1
+    table: ANALYTICS_DB.DATA_APPS_SIMULATED.identifies
+    timestamp_col: timestamp
+    ids:
+      - sql: "user_id"
+        type: user_id
+      - sql: "properties_email"
+        type: email
+      - sql: "anonymous_id"
+        type: anonymous_id
+
+  - name: tracks_1
+    table: tracks
+    timestamp_col: timestamp
+    ids:
+      - sql: "user_id"
+        type: user_id
+      - sql: "anonymous_id"
+        type: anonymous_id
+
+  - name: checkout_steps_1
+    table: CHECKOUT_STEP_COMPLETED
+    timestamp_col: timestamp
+    ids:
+      - sql: "user_id"
+        type: user_id
+
+  - name: product_added_1
+    table: PRODUCT_ADDED
+    timestamp_col: timestamp
+    ids:
+      - sql: "user_id"
+        type: user_id
+
+  - name: order_completed_1
+    table: ORDER_COMPLETED
+    timestamp_col: timestamp
+    ids:
+      - sql: "user_id"
+        type: user_id
+
+  - name: checkout_step_completed_1
+    table: checkout_step_completed
+    timestamp_col: timestamp
+    ids:
+      - sql: "user_id"
+        type: user_id
