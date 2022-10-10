@@ -355,3 +355,41 @@ models:
               and main_id is not null and timestamp is not null and timestamp != ''
             value: count(distinct date(timestamp))
 
+# Is churned in past n days for n=300 and 50
+        - tablevar:
+            name: days_since_last_seen_for_churn
+            ref:
+              input: tracks_1
+            filter: main_id is not null
+            value: datediff(day, date(max(timestamp)), CURRENT_TIMESTAMP())
+
+        - tablefeature:
+            name: is_churned_300_days
+            ref:
+              input: tracks_1
+            filter: main_id is not null and days_since_last_seen_for_churn >= 0
+            value: max(case when days_since_last_seen_for_churn > 300 then 1 else 0 end)
+
+        - tablefeature:
+            name: is_churned_50_days
+            ref:
+              input: tracks_1
+            filter: main_id is not null and days_since_last_seen_for_churn >= 0
+            value: max(case when days_since_last_seen_for_churn > 50 then 1 else 0 end)
+
+# Active days in past n days for n=300 and 100
+        - tablefeature:
+            name: active_days_in_past_300_days
+            ref:
+              input: tracks_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 300
+              and main_id is not null and timestamp is not null and timestamp != ''
+            value: count(distinct date(timestamp))
+
+        - tablefeature:
+            name: active_days_in_past_100_days
+            ref:
+              input: tracks_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 100
+              and main_id is not null and timestamp is not null and timestamp != ''
+            value: count(distinct date(timestamp))
