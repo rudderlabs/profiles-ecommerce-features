@@ -196,6 +196,40 @@ models:
             name: days_since_last_added
             value: datediff(day, date(max_timestamp_for_cart_add), TO_DATE('2022.09.23', 'YYYY.MM.DD'))
 
+# Products added in past n days for n=300 and 500
+        - tablefeature:
+            name: products_added_in_past_300_days
+            ref:
+              input: product_added_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 300
+              and main_id is not null
+            value: array_agg(cast(PROPERTIES_PRODUCT_ID as varchar))
+
+        - tablefeature:
+            name: products_added_in_past_500_days
+            ref:
+              input: product_added_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 500
+              and main_id is not null
+            value: array_agg(cast(PROPERTIES_PRODUCT_ID as varchar))
+
+# Carts in past n days for n=300 and 100
+        - tablefeature:
+            name: carts_in_past_300_days
+            ref:
+              input: product_added_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 300
+               and main_id is not null
+            value: count(distinct PROPERTIES_CART_ID)
+
+        - tablefeature:
+            name: carts_in_past_100_days
+            ref:
+              input: product_added_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 100
+               and main_id is not null
+            value: count(distinct PROPERTIES_CART_ID)
+
 # Items Purchased ever
         - tablefeature:
             name: flat_properties_products
@@ -286,3 +320,38 @@ models:
         - feature:
             name: last_transaction
             value: max_timestamp_txn
+
+# Amount spent in past n days for n=300 and 100
+        - tablefeature:
+            name: amt_spent_in_past_300_days
+            ref:
+              input: order_completed_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 300
+              and main_id is not null and PROPERTIES_TOTAL is not null
+            value: sum(cast(PROPERTIES_TOTAL as real))
+
+        - tablefeature:
+            name: amt_spent_in_past_100_days
+            ref:
+              input: order_completed_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 100
+              and main_id is not null and PROPERTIES_TOTAL is not null
+            value: sum(cast(PROPERTIES_TOTAL as real))
+
+# Transactions in past n days for n=300 and 100
+        - tablefeature:
+            name: transactions_in_past_300_days
+            ref:
+              input: order_completed_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 300
+              and main_id is not null and timestamp is not null and timestamp != ''
+            value: count(distinct date(timestamp))
+
+        - tablefeature:
+            name: transactions_in_past_100_days
+            ref:
+              input: order_completed_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 100
+              and main_id is not null and timestamp is not null and timestamp != ''
+            value: count(distinct date(timestamp))
+
