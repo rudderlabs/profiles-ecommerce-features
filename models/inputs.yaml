@@ -1,3 +1,4 @@
+# Inputs for ID Stitcjer model
 inputs:
   - name: identifies_1
     table: ANALYTICS_DB.DATA_APPS_SIMULATED.identifies

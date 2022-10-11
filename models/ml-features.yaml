@@ -1,22 +1,23 @@
 models:
-  - name: domain_profile_id_stitcher
+  - name: e_comm_feature_id_stitcher
     model_type: id_stitcher
     model_spec:
       validity_time: 24h # 1 day
       entity_key: user
       main_id_type: main_id
       edge_sources:
+      # Specify from inputs.yaml file
         - input: identifies_1
         - input: tracks_1
         - input: product_added_1
         - input: order_completed_1
         - input: checkout_step_completed_1
-  - name: domain_profile
+  - name: e_comm_feature
     model_type: feature_table_model
     model_spec:
       validity_time: 24h # 1 day
       id_stitching:
-        model: domain_profile_id_stitcher
+        model: e_comm_feature_id_stitcher
       features:
 
 # Latest Country
@@ -27,16 +28,12 @@ models:
             filter: properties_country is not null and properties_country != ''
             value: max(timestamp)
 
-        - tablevar:
-            name: max_timestamp_country
+        - tablefeature:
+            name: latest_country
             ref:
               input: identifies_1
             filter: timestamp = max_timestamp_for_country and main_id is not null
             value: max(properties_country)
-
-        - feature:
-            name: latest_country
-            value: max_timestamp_country
 
 # Latest State
         - tablevar:
@@ -46,19 +43,15 @@ models:
             filter: properties_state is not null and properties_state != ''
             value: max(timestamp)
 
-        - tablevar:
-            name: max_timestamp_state
+        - tablefeature:
+            name: latest_state
             ref:
               input: identifies_1
             filter: timestamp = max_timestamp_for_state and main_id is not null
             value: max(properties_state)
 
-        - feature:
-            name: latest_state
-            value: max_timestamp_state
-
 # has mobile app?
-        - tablevar:
+        - tablefeature:
             name: has_mobile_app
             ref:
               input: identifies_1
@@ -66,7 +59,7 @@ models:
             value: max(case when lower(context_device_type) in ('android', 'ios') then 1 else 0 end)
 
 # Campaign source
-        - tablevar:
+        - tablefeature:
             name: campaign_source
             ref:
               input: identifies_1
@@ -97,16 +90,12 @@ models:
             filter: properties_gender is not null and properties_gender != ''
             value: max(timestamp)
 
-        - tablevar:
-            name: max_timestamp_gender
+        - tablefeature:
+            name: gender
             ref:
               input: identifies_1
             filter: timestamp = max_timestamp_for_gender and main_id is not null
             value: max(properties_gender)
-
-        - feature:
-            name: gender
-            value: max_timestamp_gender
 
 # Days since account creation
         - tablevar:
@@ -147,18 +136,19 @@ models:
             ref:
               input: identifies_1
             filter: max_timestamp_dob is not null and max_timestamp_dob != ''
-            value: max(CASE WHEN CURRENT_TIMESTAMP() < TO_DATE('2022.09.23', 'YYYY.MM.DD')
-                    THEN
-                    (CASE WHEN dateadd(year, datediff (year, max_timestamp_dob, CURRENT_TIMESTAMP()), max_timestamp_dob) > CURRENT_TIMESTAMP()
-                    THEN datediff(year, max_timestamp_dob, CURRENT_TIMESTAMP()) - 1
-                    ELSE datediff(year, max_timestamp_dob, CURRENT_TIMESTAMP())
-                    END)
-                    ELSE
-                    (CASE WHEN dateadd(year, datediff (year, max_timestamp_dob, TO_DATE('2022.09.23', 'YYYY.MM.DD')), max_timestamp_dob) > TO_DATE('2022.09.23', 'YYYY.MM.DD')
-                    THEN datediff(year, max_timestamp_dob, TO_DATE('2022.09.23', 'YYYY.MM.DD')) - 1
-                    ELSE datediff(year, max_timestamp_dob, TO_DATE('2022.09.23', 'YYYY.MM.DD'))
-                    END)
-                    END)
+            value: >-
+              max(CASE WHEN CURRENT_TIMESTAMP() < TO_DATE('2022.09.23', 'YYYY.MM.DD')
+              THEN
+              (CASE WHEN dateadd(year, datediff (year, max_timestamp_dob, CURRENT_TIMESTAMP()), max_timestamp_dob) > CURRENT_TIMESTAMP()
+              THEN datediff(year, max_timestamp_dob, CURRENT_TIMESTAMP()) - 1
+              ELSE datediff(year, max_timestamp_dob, CURRENT_TIMESTAMP())
+              END)
+              ELSE
+              (CASE WHEN dateadd(year, datediff (year, max_timestamp_dob, TO_DATE('2022.09.23', 'YYYY.MM.DD')), max_timestamp_dob) > TO_DATE('2022.09.23', 'YYYY.MM.DD')
+              THEN datediff(year, max_timestamp_dob, TO_DATE('2022.09.23', 'YYYY.MM.DD')) - 1
+              ELSE datediff(year, max_timestamp_dob, TO_DATE('2022.09.23', 'YYYY.MM.DD'))
+              END)
+              END)
 
         - feature:
             name: age_in_years
@@ -173,16 +163,12 @@ models:
             value: count(distinct properties_cart_id)
 
 # Total products added to the cart
-        - tablevar:
-            name: total_products
+        - tablevfeature:
+            name: total_products_added_to_cart
             ref:
               input: product_added_1
             filter: main_id != '' and main_id IS NOT NULL
             value: count(*)
-
-        - feature:
-            name: total_products_added_to_cart
-            value: total_products
 
 # Days since last added
         - tablevar:
@@ -310,16 +296,12 @@ models:
             filter: properties_total is not null
             value: max(timestamp)
 
-        - tablevar:
-            name: max_timestamp_txn
+        - tablefeature:
+            name: last_transaction
             ref:
               input: order_completed_1
             filter: timestamp = max_timestamp_for_txn and main_id is not null
             value: max(properties_total)
-
-        - feature:
-            name: last_transaction
-            value: max_timestamp_txn
 
 # Amount spent in past n days for n=300 and 100
         - tablefeature:
