@@ -116,6 +116,25 @@ models:
             name: days_Since_Account_creation
             value: TO_DATE(least_ref_timestamp) - TO_DATE(min_timestamp_for_acc)
 
+# Email Domain
+        - tablevar:
+            name: email_domain_row_num
+            ref:
+              input: identifies_1
+            filter: main_id is not null
+            value: row_number()
+            window:
+              order_by:
+                - timestamp desc
+
+        - tablefeature:
+            name: email_domain
+            ref:
+              input: identifies_1
+            filter: main_id is not null and properties_email is not null and properties_email !=
+              '' and email_domain_row_num = 1
+            value: max(lower(split_part(properties_email, '@', 2)))
+
 # Age
         - tablevar:
             name: max_timestamp_for_dob
@@ -375,3 +394,36 @@ models:
             filter: datediff(day, date(timestamp), TO_DATE('2022.09.23', 'YYYY.MM.DD')) <= 100
               and main_id is not null and timestamp is not null and timestamp != ''
             value: count(distinct date(timestamp))
+
+# Highest Spent Category
+        - tablevar:
+            name: category_ref_var
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: (select t.value['category_l1'] from order_completed_1, TABLE(FLATTEN(parse_json(PROPERTIES_PRODUCTS))) t group by category_ref_var)
+
+        - tablevar:
+            name: amount_spent
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: (select t.value['price'] from order_completed_1, TABLE(FLATTEN(parse_json(PROPERTIES_PRODUCTS))) t group by category_ref_var)
+
+        - tablevar:
+            name: order_completed_row_num
+            ref:
+              input: order_completed_1
+            filter: main_id is not null
+            value: row_number()
+            window:
+              order_by:
+                - amount_spent desc
+
+        - tablefeature:
+            name: highest_spent_category
+            ref:
+              input: order_completed_1
+            filter: main_id is not null and order_completed_row_num = 1
+            value: category_ref_var
+
