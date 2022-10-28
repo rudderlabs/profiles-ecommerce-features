@@ -136,6 +136,7 @@ models:
             ref:
               input: identifies_1
             filter: max_timestamp_dob is not null and max_timestamp_dob != ''
+            # Here you can use any date value instead of '2022.09.23' as a reference
             value: >-
               max(CASE WHEN CURRENT_TIMESTAMP() < TO_DATE('2022.09.23', 'YYYY.MM.DD')
               THEN
