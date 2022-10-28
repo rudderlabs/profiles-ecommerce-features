@@ -1,9 +1,9 @@
 # Project name
-name: feature_store_template
+name: e-commerce-feature_store_template
 # Project's yaml schema version
-schema_version: 4
+schema_version: 8
 # WH Connection Profile to use.
-profile: kuldeep_test_fs
+profile: dev
 
 # Model folders to use.
 model_folders:
