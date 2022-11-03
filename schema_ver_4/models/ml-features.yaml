@@ -164,7 +164,7 @@ models:
             value: count(distinct properties_cart_id)
 
 # Total products added to the cart
-        - tablevfeature:
+        - tablefeature:
             name: total_products_added_to_cart
             ref:
               input: product_added_1
