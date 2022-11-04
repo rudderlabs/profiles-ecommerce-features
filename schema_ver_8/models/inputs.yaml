@@ -1,7 +1,7 @@
 # Inputs for ID Stitcjer model
 inputs:
   - name: identifies_1
-    table: ANALYTICS_DB.DATA_APPS_SIMULATED.identifies
+    table: ANALYTICS_DB.data_apps_simulated_es.identifies
     timestamp_col: timestamp
     ids:
       - sql: "user_id"
@@ -12,7 +12,7 @@ inputs:
         type: anonymous_id
 
   - name: tracks_1
-    table: tracks
+    table: ANALYTICS_DB.data_apps_simulated_es.tracks
     timestamp_col: timestamp
     ids:
       - sql: "user_id"
@@ -21,28 +21,28 @@ inputs:
         type: anonymous_id
 
   - name: checkout_steps_1
-    table: CHECKOUT_STEP_COMPLETED
+    table: ANALYTICS_DB.data_apps_simulated_es.CHECKOUT_STEP_COMPLETED
     timestamp_col: timestamp
     ids:
       - sql: "user_id"
         type: user_id
 
   - name: product_added_1
-    table: PRODUCT_ADDED
+    table: ANALYTICS_DB.data_apps_simulated_es.PRODUCT_ADDED
     timestamp_col: timestamp
     ids:
       - sql: "user_id"
         type: user_id
 
   - name: order_completed_1
-    table: ORDER_COMPLETED
+    table: ANALYTICS_DB.data_apps_simulated_es.ORDER_COMPLETED
     timestamp_col: timestamp
     ids:
       - sql: "user_id"
         type: user_id
 
   - name: checkout_step_completed_1
-    table: checkout_step_completed
+    table: ANALYTICS_DB.data_apps_simulated_es.checkout_step_completed
     timestamp_col: timestamp
     ids:
       - sql: "user_id"
