@@ -8,8 +8,6 @@ inputs:
         type: user_id
       - sql: "properties_email"
         type: email
-      - sql: "anonymous_id"
-        type: anonymous_id
 
   - name: tracks_1
     table: ANALYTICS_DB.data_apps_simulated_es.tracks
@@ -17,8 +15,6 @@ inputs:
     ids:
       - sql: "user_id"
         type: user_id
-      - sql: "anonymous_id"
-        type: anonymous_id
 
   - name: checkout_steps_1
     table: ANALYTICS_DB.data_apps_simulated_es.CHECKOUT_STEP_COMPLETED
