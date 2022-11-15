@@ -1,0 +1,128 @@
+models:
+- model_spec:
+    edge_sources: [inputs/identifies_1, inputs/tracks_1, inputs/product_added_1, inputs/order_completed_1,
+      inputs/checkout_step_completed_1]
+    entity_key: user
+    main_id_type: main_id
+    validity_time: 24h
+  model_type: id_stitcher
+  name: e_comm_feature_id_stitcher
+- model_spec:
+    features:
+    - tablevar: {filter: properties_country is not null and properties_country !=
+          '', name: max_timestamp_for_country, ref: inputs/identifies_1, value: max(timestamp)}
+    - tablefeature: {filter: timestamp = max_timestamp_for_country and main_id is
+          not null, name: country, ref: inputs/identifies_1, value: max(properties_country)}
+    - tablevar: {filter: properties_state is not null and properties_state != '',
+        name: max_timestamp_for_state, ref: inputs/identifies_1, value: max(timestamp)}
+    - tablefeature: {filter: timestamp = max_timestamp_for_state and main_id is not
+          null, name: state, ref: inputs/identifies_1, value: max(properties_state)}
+    - tablefeature: {filter: main_id is not null, name: has_mobile_app, ref: inputs/identifies_1,
+        value: 'max(case when lower(context_device_type) in (''android'', ''ios'')
+          then 1 else 0 end)'}
+    - tablefeature: {filter: main_id is not null, name: campaign_source, ref: inputs/identifies_1,
+        value: (array_agg(distinct context_campaign_source ))}
+    - tablefeature: {filter: main_id is not null, name: is_active_on_website, ref: inputs/identifies_1,
+        value: max(case when lower(CONTEXT_DEVICE_TYPE) like '%pc' then 1 else 0 end)}
+    - tablefeature: {filter: main_id is not null, name: payment_methods, ref: inputs/checkout_step_completed_1,
+        value: (array_agg(distinct properties_payment_method))}
+    - tablevar: {filter: properties_gender is not null and properties_gender != '',
+        name: max_timestamp_for_gender, ref: inputs/identifies_1, value: max(timestamp)}
+    - tablefeature: {filter: timestamp = max_timestamp_for_gender and main_id is not
+          null, name: gender, ref: inputs/identifies_1, value: max(properties_gender)}
+    - tablevar: {filter: timestamp is not null and timestamp != '' and main_id is
+          not null, name: min_timestamp_for_acc, ref: inputs/identifies_1, value: min(timestamp)}
+    - tablevar: {name: least_ref_timestamp, ref: inputs/identifies_1, value: 'least(TO_DATE(''2022.06.29'',
+          ''YYYY.MM.DD''), CURRENT_TIMESTAMP())'}
+    - feature: {name: days_since_account_creation, value: TO_DATE(least_ref_timestamp)
+          - TO_DATE(min_timestamp_for_acc)}
+    - tablevar: {filter: properties_birthday is not null and properties_birthday !=
+          '', name: max_timestamp_for_dob, ref: inputs/identifies_1, value: max(timestamp)}
+    - tablevar: {filter: timestamp = max_timestamp_for_dob and main_id is not null,
+        name: max_timestamp_dob, ref: inputs/identifies_1, value: max(properties_birthday)}
+    - tablevar: {filter: max_timestamp_dob is not null and max_timestamp_dob != '',
+        name: age_from_dob, ref: inputs/identifies_1, value: 'max(CASE WHEN CURRENT_TIMESTAMP()
+          < TO_DATE(''2022.06.29'', ''YYYY.MM.DD'') THEN (CASE WHEN dateadd(year,
+          datediff (year, max_timestamp_dob, CURRENT_TIMESTAMP()), max_timestamp_dob)
+          > CURRENT_TIMESTAMP() THEN datediff(year, max_timestamp_dob, CURRENT_TIMESTAMP())
+          - 1 ELSE datediff(year, max_timestamp_dob, CURRENT_TIMESTAMP()) END) ELSE
+          (CASE WHEN dateadd(year, datediff (year, max_timestamp_dob, TO_DATE(''2022.06.29'',
+          ''YYYY.MM.DD'')), max_timestamp_dob) > TO_DATE(''2022.06.29'', ''YYYY.MM.DD'')
+          THEN datediff(year, max_timestamp_dob, TO_DATE(''2022.06.29'', ''YYYY.MM.DD''))
+          - 1 ELSE datediff(year, max_timestamp_dob, TO_DATE(''2022.06.29'', ''YYYY.MM.DD''))
+          END) END)'}
+    - feature: {name: age, value: age_from_dob}
+    - tablefeature: {filter: main_id != '' and main_id IS NOT NULL and properties_cart_id
+          IS NOT NULL, name: total_carts, ref: inputs/product_added_1, value: count(distinct
+          properties_cart_id)}
+    - tablefeature: {filter: main_id != '' and main_id IS NOT NULL, name: total_products_added_to_cart,
+        ref: inputs/product_added_1, value: count(*)}
+    - tablevar: {filter: timestamp is not null and timestamp != '' and main_id is
+          not null, name: max_timestamp_for_cart_add, ref: inputs/product_added_1,
+        value: max(timestamp)}
+    - feature: {name: days_since_last_card_add, value: 'datediff(day, date(max_timestamp_for_cart_add),
+          TO_DATE(''2022.06.29'', ''YYYY.MM.DD''))'}
+    - tablevar: {filter: timestamp is not null and timestamp != '' and main_id is
+          not null, name: max_timestamp_for_purchase, ref: inputs/order_completed_1,
+        value: max(timestamp)}
+    - feature: {name: days_since_last_purchase, value: 'datediff(day, date(max_timestamp_for_purchase),
+          TO_DATE(''2022.06.29'', ''YYYY.MM.DD''))'}
+    - tablevar: {filter: timestamp is not null and timestamp != '' and main_id is
+          not null, name: max_timestamp_for_seen, ref: inputs/tracks_1, value: max(timestamp)}
+    - feature: {name: days_since_last_seen, value: 'datediff(day, date(max_timestamp_for_seen),
+          TO_DATE(''2022.06.29'', ''YYYY.MM.DD''))'}
+    - tablefeature: {filter: 'datediff(day, date(timestamp), TO_DATE(''2022.06.29'',
+          ''YYYY.MM.DD'')) <= 90 and main_id is not null', name: products_added_in_past_90_days,
+        ref: inputs/product_added_1, value: array_agg(cast(PROPERTIES_PRODUCT_ID as
+          varchar))}
+    - tablefeature: {filter: 'datediff(day, date(timestamp), TO_DATE(''2022.06.29'',
+          ''YYYY.MM.DD'')) <= 90 and main_id is not null', name: carts_in_past_90_days,
+        ref: inputs/product_added_1, value: count(distinct PROPERTIES_CART_ID)}
+    - tablefeature: {filter: main_id is not null, name: items_purchased_ever, ref: inputs/order_completed_1,
+        value: '(select array_agg(distinct t.value[''product_id'']) from order_completed_1,
+          TABLE(FLATTEN(parse_json(properties_products))) t)'}
+    - tablefeature: {filter: main_id is not null, name: categories_purchased_ever,
+        ref: inputs/order_completed_1, value: '(select array_agg(distinct t.value[''category_l1''])
+          from order_completed_1, TABLE(FLATTEN(parse_json(properties_products)))
+          t)'}
+    - tablefeature: {filter: main_id is not null, name: avg_transaction_value, ref: inputs/order_completed_1,
+        value: avg(properties_total)}
+    - tablefeature: {filter: main_id is not null, name: avg_unit_per_transaction,
+        ref: inputs/order_completed_1, value: avg(array_size(parse_json(properties_products)))}
+    - tablefeature: {filter: main_id is not null, name: median_transaction_value,
+        ref: inputs/order_completed_1, value: median(properties_total)}
+    - tablefeature: {filter: main_id is not null, name: total_amt_spent, ref: inputs/order_completed_1,
+        value: sum(properties_total)}
+    - tablefeature: {filter: main_id is not null, name: highest_transaction_value,
+        ref: inputs/order_completed_1, value: max(properties_total)}
+    - tablefeature: {filter: main_id is not null, name: total_transactions, ref: inputs/order_completed_1,
+        value: count(*)}
+    - tablefeature: {filter: main_id is not null, name: has_credit_card, ref: inputs/checkout_step_completed_1,
+        value: 'max(case when lower(properties_payment_method) in (''MasterCard'',
+          ''visa'') then 1 else 0 end)'}
+    - tablevar: {filter: properties_total is not null, name: max_timestamp_for_txn,
+        ref: inputs/order_completed_1, value: max(timestamp)}
+    - tablefeature: {filter: timestamp = max_timestamp_for_txn and main_id is not
+          null, name: last_transaction_value, ref: inputs/order_completed_1, value: max(properties_total)}
+    - tablefeature: {filter: 'datediff(day, date(timestamp), TO_DATE(''2022.06.29'',
+          ''YYYY.MM.DD'')) <= 90 and main_id is not null and PROPERTIES_TOTAL is not
+          null', name: amt_spent_in_past_90_days, ref: inputs/order_completed_1, value: sum(cast(PROPERTIES_TOTAL
+          as real))}
+    - tablefeature: {filter: 'datediff(day, date(timestamp), TO_DATE(''2022.06.29'',
+          ''YYYY.MM.DD'')) <= 90 and main_id is not null and timestamp is not null
+          and timestamp != ''''', name: transactions_in_past_90_days, ref: inputs/order_completed_1,
+        value: count(distinct date(timestamp))}
+    - tablevar: {filter: main_id is not null, name: days_since_last_seen_for_churn,
+        ref: inputs/tracks_1, value: 'datediff(day, date(max(timestamp)), TO_DATE(''2022.06.29'',
+          ''YYYY.MM.DD''))'}
+    - tablefeature: {filter: main_id is not null and days_since_last_seen_for_churn
+          >= 0, name: is_churned_90_days, ref: inputs/tracks_1, value: max(case when
+          days_since_last_seen_for_churn > 90 then 1 else 0 end)}
+    - tablefeature: {filter: 'datediff(day, date(timestamp), TO_DATE(''2022.06.29'',
+          ''YYYY.MM.DD'')) <= 90 and main_id is not null and timestamp is not null
+          and timestamp != ''''', name: active_days_in_past_90_days, ref: inputs/tracks_1,
+        value: count(distinct date(timestamp))}
+    id_stitching: models/e_comm_feature_id_stitcher
+    validity_time: 24h
+  model_type: feature_table_model
+  name: e_comm_feature
