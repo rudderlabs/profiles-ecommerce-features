@@ -9,6 +9,19 @@ After installing RS360 you can run the following comand:
 wht run
 ```
 
+ToDo: Following features are not yet added in the project:
+
+* AVG_SESSION_LENGTH_OVERALL
+* N_SESSIONS_OVERALL
+* HIGHEST_SPENT_CATEGORY
+* HIGHEST_TRANSACTED_CATEGORY
+* EMAIL_DOMAIN
+
+Below features need to be edited for correctness:
+
+* ITEMS_PURCHASED_EVER
+* CATEGORIES_PURCHASED_EVER
+
 ## Know More
 [DBT Project](https://github.com/rudderlabs/data-apps-ecommerce-template)
 
