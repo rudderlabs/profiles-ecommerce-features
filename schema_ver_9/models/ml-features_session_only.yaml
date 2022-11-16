@@ -1,0 +1,69 @@
+models:
+  - name: e_comm_feature_id_stitcher
+    model_type: id_stitcher
+    model_spec:
+      validity_time: 24h # 1 day
+      entity_key: user
+      main_id_type: main_id
+      edge_sources:
+      # Specify from inputs.yaml file
+        - inputs/identifies_1
+        - inputs/tracks_1
+        - inputs/product_added_1
+        - inputs/order_completed_1
+        - inputs/checkout_step_completed_1
+  - name: e_comm_feature
+    model_type: feature_table_model
+    model_spec:
+      validity_time: 24h # 1 day
+      id_stitching:
+        models/e_comm_feature_id_stitcher
+      macros:
+        - name: session_cutoff_in_sec
+          value: 1800
+      features:
+# Defining Sessions
+        - tablevar:
+            name: prev_ts
+            ref: inputs/tracks_1
+            value: lag(timestamp, 1, timestamp)
+            window:
+              order_by: 
+                - timestamp asc
+        - tablevar:
+            name: session_id
+            ref: inputs/tracks_1
+            value: sum(case when coalesce(datediff(second, prev_ts, timestamp),0) > {{session_cutoff_in_sec}} then 1 else 0 end)
+            window:
+               order_by:
+                 - timestamp asc
+# Session Start and End Time
+        - tablevar:
+            name: session_start_time
+            ref: inputs/tracks_1
+            value: min(timestamp)
+            window:
+               partition_by:
+                  - session_id
+        - tablevar:
+            name: session_end_time
+            ref: inputs/tracks_1
+            value: max(timestamp)
+            window:
+               partition_by:
+                  - session_id
+        - tablevar:
+            name: session_row_number
+            ref: inputs/tracks_1
+            value: row_number()
+            window:
+                partition_by: 
+                   - session_id
+                order_by:
+                   - timestamp desc
+# Features - session length overall
+        - tablefeature:
+            name: n_sessions_overall
+            ref: inputs/tracks_1
+            value: count(distinct session_id)
+#
