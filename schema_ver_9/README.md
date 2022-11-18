@@ -13,7 +13,7 @@ There are a few views in the `views/` directory. They are supposed to be created
 
 In models folder, we have `ml-features_window_features.bkp_yaml` file added in case of debugging the window functions
 
-In the `ml-features.yaml` file, all features that rely on window functions are commented out. 
+In the `ml-features.yaml` file, all features that rely on window functions are commented out, as there's a pending fix on inputvars that need to be merged before they are tested. 
 
 ## Know More
 [DBT Project](https://github.com/rudderlabs/data-apps-ecommerce-template)

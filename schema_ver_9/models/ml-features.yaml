@@ -150,7 +150,8 @@ models:
             ref: inputs/identifies_1
             value: first_value(lower(split_part(properties_email, '@', 2)))
             window:
-              order by: timestamp desc
+              order_by: 
+              - timestamp desc
 
 # Total carts
         - tablefeature:
@@ -213,19 +214,6 @@ models:
                and main_id is not null
             value: count(distinct PROPERTIES_CART_ID)
 
-# Items Purchased ever
-        - tablefeature:
-            name: items_purchased_ever
-            ref: inputs/order_completed_1
-            filter: main_id is not null
-            value: (select array_agg(distinct t.value['product_id']) from order_completed_1, TABLE(FLATTEN(parse_json(properties_products))) t)
-
-# Categories Purchased ever
-        - tablefeature:
-            name: categories_purchased_ever
-            ref: inputs/order_completed_1
-            filter: main_id is not null
-            value: (select array_agg(distinct t.value['category_l1']) from order_completed_1, TABLE(FLATTEN(parse_json(properties_products))) t)
 
 # Average transaction value
         - tablefeature:
@@ -275,7 +263,7 @@ models:
             name: has_credit_card
             ref: inputs/checkout_step_completed_1
             filter: main_id is not null
-            value: max(case when lower(properties_payment_method) in ('MasterCard', 'visa') then 1 else 0 end)
+            value: max(case when lower(properties_payment_method) in ('mastercard', 'visa') then 1 else 0 end)
 
 # Last transaction
         - tablevar:
