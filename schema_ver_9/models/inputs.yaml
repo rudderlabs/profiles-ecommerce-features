@@ -30,3 +30,9 @@ inputs:
   name: checkout_step_completed_1
   table: ANALYTICS_DB.data_apps_simulated_es.checkout_step_completed
   timestamp_col: timestamp
+- ids:
+  - {sql: user_id, type: user_id}
+  name: order_completed_view
+  view: ANALYTICS_DB.DATA_APPS_SIMULATED_ES.STG_ORDER_COMPLETED_ROWS
+  timestamp_col: timestamp
+  
