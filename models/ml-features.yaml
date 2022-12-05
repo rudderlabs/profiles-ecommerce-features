@@ -1,0 +1,444 @@
+models:
+  - name: e_comm_feature_id_stitcher
+    model_type: id_stitcher
+    model_spec:
+      validity_time: 24h # 1 day
+      entity_key: user
+      main_id_type: main_id
+      edge_sources:
+      # Specify from inputs.yaml file
+        - inputs/identifies_1
+        - inputs/tracks_1
+        - inputs/product_added_1
+        - inputs/order_completed_1
+        - inputs/checkout_step_completed_1
+        - inputs/order_completed_view
+  - name: e_comm_feature
+    model_type: feature_table_model
+    model_spec:
+      validity_time: 24h # 1 day
+      id_stitching:
+        models/e_comm_feature_id_stitcher
+      macros:
+        - name: session_cutoff_in_sec
+          value: 1800
+      features:
+
+# Latest Country
+        - tablevar:
+            name: max_timestamp_for_country
+            ref: inputs/identifies_1
+            filter: properties_country is not null and properties_country != ''
+            value: max(timestamp)
+
+        - tablefeature:
+            name: country
+            ref: inputs/identifies_1
+            filter: timestamp = max_timestamp_for_country and main_id is not null
+            value: max(properties_country)
+
+# Latest State
+        - tablevar:
+            name: max_timestamp_for_state
+            ref: inputs/identifies_1
+            filter: properties_state is not null and properties_state != ''
+            value: max(timestamp)
+
+        - tablefeature:
+            name: state
+            ref: inputs/identifies_1
+            filter: timestamp = max_timestamp_for_state and main_id is not null
+            value: max(properties_state)
+
+# has mobile app?
+        - tablefeature:
+            name: has_mobile_app
+            ref: inputs/identifies_1
+            filter: main_id is not null
+            value: max(case when lower(context_device_type) in ('android', 'ios') then 1 else 0 end)
+
+# Campaign source
+        - tablefeature:
+            name: campaign_source
+            ref: inputs/identifies_1
+            filter: main_id is not null
+            value: (array_agg(distinct context_campaign_source ))
+
+# Is active on website?
+        - tablefeature:
+            name: is_active_on_website
+            ref: inputs/identifies_1
+            filter: main_id is not null
+            value: max(case when lower(CONTEXT_DEVICE_TYPE) like '%pc' then 1 else 0 end)
+
+# Payment Method
+        - tablefeature:
+            name: payment_methods
+            ref: inputs/checkout_step_completed_1
+            filter: main_id is not null
+            value: (array_agg(distinct properties_payment_method))
+
+# Gender
+        - tablevar:
+            name: max_timestamp_for_gender
+            ref: inputs/identifies_1
+            filter: properties_gender is not null and properties_gender != ''
+            value: max(timestamp)
+
+        - tablefeature:
+            name: gender
+            ref: inputs/identifies_1
+            filter: timestamp = max_timestamp_for_gender and main_id is not null
+            value: max(properties_gender)
+
+# Days since account creation
+        - tablevar:
+            name: min_timestamp_for_acc
+            ref: inputs/identifies_1
+            filter: timestamp is not null and timestamp != '' and main_id is not null
+            value: min(timestamp)
+
+        - tablevar:
+            name: least_ref_timestamp
+            ref: inputs/identifies_1
+            # Here you can use any date value instead of '2022.06.29' as a reference
+            value: least(TO_DATE('2022.06.29', 'YYYY.MM.DD'), CURRENT_TIMESTAMP())
+
+        - feature:
+            name: days_since_account_creation
+            value: TO_DATE(least_ref_timestamp) - TO_DATE(min_timestamp_for_acc)
+
+# Age
+        - tablevar:
+            name: max_timestamp_for_dob
+            ref: inputs/identifies_1
+            filter: properties_birthday is not null and properties_birthday != ''
+            value: max(timestamp)
+
+        - tablevar:
+            name: max_timestamp_dob
+            ref: inputs/identifies_1
+            filter: timestamp = max_timestamp_for_dob and main_id is not null
+            value: max(properties_birthday)
+
+        - tablevar:
+            name: age_from_dob
+            ref: inputs/identifies_1
+            filter: max_timestamp_dob is not null and max_timestamp_dob != ''
+            # Here you can use any date value instead of '2022.06.29' as a reference
+            value: >-
+              max(CASE WHEN CURRENT_TIMESTAMP() < TO_DATE('2022.06.29', 'YYYY.MM.DD')
+              THEN
+              (CASE WHEN dateadd(year, datediff (year, max_timestamp_dob, CURRENT_TIMESTAMP()), max_timestamp_dob) > CURRENT_TIMESTAMP()
+              THEN datediff(year, max_timestamp_dob, CURRENT_TIMESTAMP()) - 1
+              ELSE datediff(year, max_timestamp_dob, CURRENT_TIMESTAMP())
+              END)
+              ELSE
+              (CASE WHEN dateadd(year, datediff (year, max_timestamp_dob, TO_DATE('2022.06.29', 'YYYY.MM.DD')), max_timestamp_dob) > TO_DATE('2022.06.29', 'YYYY.MM.DD')
+              THEN datediff(year, max_timestamp_dob, TO_DATE('2022.06.29', 'YYYY.MM.DD')) - 1
+              ELSE datediff(year, max_timestamp_dob, TO_DATE('2022.06.29', 'YYYY.MM.DD'))
+              END)
+              END)
+
+        - feature:
+            name: age
+            value: age_from_dob
+
+# Email Domain
+        - tablefeature:
+            name: email_domain
+            ref: inputs/identifies_1
+            value: first_value(lower(split_part(properties_email, '@', 2)))
+            window:
+              order_by: 
+              - timestamp desc
+            filter: properties_email is not null
+
+# Total carts
+        - tablefeature:
+            name: total_carts
+            ref: inputs/product_added_1
+            filter: main_id != '' and main_id IS NOT NULL and properties_cart_id IS NOT NULL
+            value: count(distinct properties_cart_id)
+
+# Total products added to the cart
+        - tablefeature:
+            name: total_products_added_to_cart
+            ref: inputs/product_added_1
+            filter: main_id != '' and main_id IS NOT NULL
+            value: count(*)
+
+# Days since last added
+        - tablevar:
+            name: max_timestamp_for_cart_add
+            ref: inputs/product_added_1
+            filter: timestamp is not null and timestamp != '' and main_id is not null
+            value: max(timestamp)
+
+        - feature:
+            name: days_since_last_card_add
+            value: datediff(day, date(max_timestamp_for_cart_add), TO_DATE('2022.06.29', 'YYYY.MM.DD'))
+
+# Days_since_last_purchase
+        - tablevar:
+            name: max_timestamp_for_purchase
+            ref: inputs/order_completed_1
+            filter: timestamp is not null and timestamp != '' and main_id is not null
+            value: max(timestamp)
+        - feature:
+            name: days_since_last_purchase
+            value: datediff(day, date(max_timestamp_for_purchase), TO_DATE('2022.06.29', 'YYYY.MM.DD'))
+
+# Days_since_last_seen
+        - tablevar:
+            name: max_timestamp_for_seen
+            ref: inputs/tracks_1
+            filter: timestamp is not null and timestamp != '' and main_id is not null
+            value: max(timestamp)
+        - feature:
+            name: days_since_last_seen
+            value: datediff(day, date(max_timestamp_for_seen), TO_DATE('2022.06.29', 'YYYY.MM.DD'))
+
+# Products added in past n days for n = 90
+        - tablefeature:
+            name: products_added_in_past_90_days
+            ref: inputs/product_added_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.06.29', 'YYYY.MM.DD')) <= 90
+              and main_id is not null
+            value: array_agg(cast(PROPERTIES_PRODUCT_ID as varchar))
+
+# Carts in past n days for n = 90
+        - tablefeature:
+            name: carts_in_past_90_days
+            ref: inputs/product_added_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.06.29', 'YYYY.MM.DD')) <= 90
+               and main_id is not null
+            value: count(distinct PROPERTIES_CART_ID)
+
+
+# Average transaction value
+        - tablefeature:
+            name: avg_transaction_value
+            ref: inputs/order_completed_1
+            filter: main_id is not null
+            value: avg(properties_total)
+
+# Average unit per transaction
+        - tablefeature:
+            name: avg_unit_per_transaction
+            ref: inputs/order_completed_1
+            filter: main_id is not null
+            value: avg(array_size(parse_json(properties_products)))
+
+# Median transaction value
+        - tablefeature:
+            name: median_transaction_value
+            ref:
+              inputs/order_completed_1
+            filter: main_id is not null
+            value: median(properties_total)
+
+# Total amount spent
+        - tablefeature:
+            name: total_amt_spent
+            ref: inputs/order_completed_1
+            filter: main_id is not null
+            value: sum(properties_total)
+
+# Highest transaction value
+        - tablefeature:
+            name: highest_transaction_value
+            ref: inputs/order_completed_1
+            filter: main_id is not null
+            value: max(properties_total)
+
+# Total transactions
+        - tablefeature:
+            name: total_transactions
+            ref: inputs/order_completed_1
+            filter: main_id is not null
+            value: count(*)
+
+# Has credit card?
+        - tablefeature:
+            name: has_credit_card
+            ref: inputs/checkout_step_completed_1
+            filter: main_id is not null
+            value: max(case when lower(properties_payment_method) in ('mastercard', 'visa') then 1 else 0 end)
+
+# Last transaction
+        - tablevar:
+            name: max_timestamp_for_txn
+            ref: inputs/order_completed_1
+            filter: properties_total is not null
+            value: max(timestamp)
+
+        - tablefeature:
+            name: last_transaction_value
+            ref: inputs/order_completed_1
+            filter: timestamp = max_timestamp_for_txn and main_id is not null
+            value: max(properties_total)
+
+# Amount spent in past n days for n = 90
+        - tablefeature:
+            name: amt_spent_in_past_90_days
+            ref: inputs/order_completed_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.06.29', 'YYYY.MM.DD')) <= 90
+              and main_id is not null and PROPERTIES_TOTAL is not null
+            value: sum(cast(PROPERTIES_TOTAL as real))
+
+# Transactions in past n days for n = 90
+        - tablefeature:
+            name: transactions_in_past_90_days
+            ref: inputs/order_completed_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.06.29', 'YYYY.MM.DD')) <= 90
+              and main_id is not null and timestamp is not null and timestamp != ''
+            value: count(distinct date(timestamp))
+
+# Is churned in past n days for n = 90
+        - tablevar:
+            name: days_since_last_seen_for_churn
+            ref: inputs/tracks_1
+            filter: main_id is not null
+            value: datediff(day, date(max(timestamp)), TO_DATE('2022.06.29', 'YYYY.MM.DD'))
+
+        - tablefeature:
+            name: is_churned_90_days
+            ref: inputs/tracks_1
+            filter: main_id is not null and days_since_last_seen_for_churn >= 0
+            value: max(case when days_since_last_seen_for_churn > 90 then 1 else 0 end)
+
+# Active days in past n days for n = 90
+        - tablefeature:
+            name: active_days_in_past_90_days
+            ref: inputs/tracks_1
+            filter: datediff(day, date(timestamp), TO_DATE('2022.06.29', 'YYYY.MM.DD')) <= 90
+              and main_id is not null and timestamp is not null and timestamp != ''
+            value: count(distinct date(timestamp))
+
+# Category and product features
+        - inputvar:
+            name: spend_per_category
+            ref: inputs/order_completed_view
+            value: sum(amount_spent)
+            window:
+              partition_by:
+                - category_l1
+                - main_id
+        - inputvar:
+            name: transactions_per_category
+            ref: inputs/order_completed_view
+            value: count(*)
+            window: 
+              partition_by: 
+                - category_l1
+                - main_id
+                
+        - tablefeature:
+            name: highest_transacted_category
+            ref: inputs/order_completed_view
+            value: first_value(category_l1)
+            window:
+              order_by:
+                - transactions_per_category desc
+        - tablefeature:
+            name: highest_spent_category
+            ref: inputs/order_completed_view
+            value: first_value(category_l1)
+            window:
+              order_by:
+                - spend_per_category desc
+        - tablefeature:
+            name: categories_purchased_ever
+            ref: inputs/order_completed_view
+            value: listagg(distinct category_l1, ',')
+
+# Category and product features
+        - inputvar:
+            name: spend_per_product
+            ref: inputs/order_completed_view
+            value: sum(amount_spent)
+            window:
+              partition_by:
+                - product_id
+                - main_id
+        - tablefeature:
+            name: highest_spent_product
+            ref: inputs/order_completed_view
+            value: first_value(product_id)
+            window:
+              order_by:
+                - spend_per_product desc
+        - tablefeature:
+            name: products_purchased_ever
+            ref: inputs/order_completed_view
+            value: listagg(distinct product_id, ',')
+
+# Defining Sessions
+        - inputvar:
+            name: prev_ts
+            ref: inputs/tracks_1
+            value: lag(timestamp, 1, timestamp)
+            window:
+              order_by: 
+                - timestamp asc
+              partition_by:
+                - main_id
+        - inputvar:
+            name: session_id
+            ref: inputs/tracks_1
+            value: sum(case when coalesce(datediff(second, prev_ts, timestamp),0) > 1800 then 1 else 0 end) #ToDo: Verify that macros work in inputvars
+            window:
+               order_by:
+                 - timestamp asc
+               partition_by:
+                 - main_id
+# Session Start and End Time
+        - inputvar:
+            name: session_start_time
+            ref: inputs/tracks_1
+            value: min(timestamp)
+            window:
+               partition_by:
+                  - session_id
+                  - main_id
+        - inputvar:
+            name: session_end_time
+            ref: inputs/tracks_1
+            value: max(timestamp)
+            window:
+               partition_by:
+                  - session_id
+                  - main_id
+        - inputvar:
+            name: session_row_number
+            ref: inputs/tracks_1
+            value: row_number()
+            window:
+                partition_by: 
+                   - session_id
+                   - main_id
+                order_by:
+                   - timestamp desc
+# Features - session length overall
+        - tablefeature:
+            name: n_sessions_overall
+            ref: inputs/tracks_1
+            value: count(distinct session_id)
+
+        - tablefeature:
+            name: n_sessions_last_week
+            ref: inputs/tracks_1
+            value: count(distinct session_id)
+            filter: datediff(day, date(session_start_time), date(to_timestamp_tz(replace('{{timestamp}}',' UTC')))) between 0 and 7
+
+        - tablefeature:
+            name: avg_session_length_overall
+            ref: inputs/tracks_1
+            value: avg(datediff(second, session_start_time, session_end_time))
+            filter: session_row_number = 1
+        - tablefeature:
+            name: avg_session_length_last_week
+            ref: inputs/tracks_1
+            value: avg(datediff(second, session_start_time, session_end_time))
+            filter: session_row_number = 1 and datediff(day, date(session_start_time), date(to_timestamp_tz(replace('{{timestamp}}',' UTC')))) between 0 and 7
