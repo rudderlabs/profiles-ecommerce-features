@@ -19,7 +19,7 @@ inputs:
         type: user_id
         entity: user
       - select: "PROPERTIES_CHECKOUT_ID"
-        type: PROPERTIES_CHECKOUT_ID
+        type: checkout_id
         entity: user
       
   - name: rsOrderCompleted
@@ -30,7 +30,7 @@ inputs:
         type: user_id
         entity: user
       - select: "PROPERTIES_CHECKOUT_ID"
-        type: PROPERTIES_CHECKOUT_ID
+        type: checkout_id
         entity: user
    
   
@@ -42,7 +42,7 @@ inputs:
         type: user_id
         entity: user
       - select: "PROPERTIES_CART_ID"
-        type: PROPERTIES_CART_ID
+        type: cart_id
         entity: user
      
 

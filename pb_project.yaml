@@ -23,15 +23,15 @@ entities:
       - main_id
       - user_id
       - anonymous_id
-      - PROPERTIES_CHECKOUT_ID
-      - PROPERTIES_CART_ID
+      - checkout_id
+      - cart_id
 
 
 id_types:
   - name: main_id
   - name: user_id
-  - name: PROPERTIES_CHECKOUT_ID
-  - name: PROPERTIES_CART_ID
+  - name: checkout_id
+  - name: cart_id
   
   - name: anonymous_id
     filters:
