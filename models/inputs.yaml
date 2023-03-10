@@ -1,38 +1,69 @@
+# This is a sample file, for detailed reference see: https://rudderlabs.github.io/pywht/
 inputs:
-- ids:
-  - {sql: user_id, type: user_id}
-  - {sql: properties_email, type: email}
-  name: identifies_1
-  table: ANALYTICS_DB.data_apps_simulated_es.identifies
-  timestamp_col: timestamp
-- ids:
-  - {sql: user_id, type: user_id}
-  name: tracks_1
-  table: ANALYTICS_DB.data_apps_simulated_es.tracks
-  timestamp_col: timestamp
-- ids:
-  - {sql: user_id, type: user_id}
-  name: checkout_steps_1
-  table: ANALYTICS_DB.data_apps_simulated_es.CHECKOUT_STEP_COMPLETED
-  timestamp_col: timestamp
-- ids:
-  - {sql: user_id, type: user_id}
-  name: product_added_1
-  table: ANALYTICS_DB.data_apps_simulated_es.PRODUCT_ADDED
-  timestamp_col: timestamp
-- ids:
-  - {sql: user_id, type: user_id}
-  name: order_completed_1
-  table: ANALYTICS_DB.data_apps_simulated_es.ORDER_COMPLETED
-  timestamp_col: timestamp
-- ids:
-  - {sql: user_id, type: user_id}
-  name: checkout_step_completed_1
-  table: ANALYTICS_DB.data_apps_simulated_es.checkout_step_completed
-  timestamp_col: timestamp
-- ids:
-  - {sql: user_id, type: user_id}
-  name: order_completed_view
-  view: ANALYTICS_DB.DATA_APPS_SIMULATED_ES.STG_ORDER_COMPLETED_ROWS
-  timestamp_col: timestamp
+  - name: rsIdentifies
+    table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.IDENTIFIES
+    occurred_at_col: timestamp
+    ids:
+      - select: "user_id"
+        type: user_id
+        entity: user
+      - select: "anonymous_id"
+        type: anonymous_id
+        entity: user
+     
+  - name: rsCheckoutStepCompleted
+    table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.CHECKOUT_STEP_COMPLETED
+    occurred_at_col: timestamp
+    ids:
+      - select: "user_id"
+        type: user_id
+        entity: user
+      - select: "PROPERTIES_CHECKOUT_ID"
+        type: checkout_id
+        entity: user
+      
+  - name: rsOrderCompleted
+    table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.ORDER_COMPLETED
+    occurred_at_col: timestamp
+    ids:
+      - select: "user_id"
+        type: user_id
+        entity: user
+      - select: "PROPERTIES_CHECKOUT_ID"
+        type: checkout_id
+        entity: user
+   
+  
+  - name: rsProductAdded
+    table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.PRODUCT_ADDED
+    occurred_at_col: timestamp
+    ids:
+      - select: "user_id"
+        type: user_id
+        entity: user
+      - select: "PROPERTIES_CART_ID"
+        type: cart_id
+        entity: user
+     
+
+  - name: rsTracks
+    table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.TRACKS
+    occurred_at_col: timestamp
+    ids:
+      - select: "user_id"
+        type: user_id
+        entity: user
+      - select: "anonymous_id"
+        type: anonymous_id
+        entity: user
+  - name: rsPages
+    table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.PAGES
+    occurred_at_col: timestamp
+    ids:
+      - select: "user_id"
+        type: user_id
+        entity: user
+      - select: "anonymous_id"
+        type: anonymous_id
+        entity: user
   
