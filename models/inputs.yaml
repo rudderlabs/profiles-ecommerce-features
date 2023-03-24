@@ -1,15 +1,5 @@
 # This is a sample file, for detailed reference see: https://rudderlabs.github.io/pywht/
 inputs:
-  - name: rsIdentifies
-    table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.IDENTIFIES
-    occurred_at_col: timestamp
-    ids:
-      - select: "user_id"
-        type: user_id
-        entity: user
-      - select: "anonymous_id"
-        type: anonymous_id
-        entity: user
      
   - name: rsCheckoutStepCompleted
     table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.CHECKOUT_STEP_COMPLETED
@@ -18,9 +8,7 @@ inputs:
       - select: "user_id"
         type: user_id
         entity: user
-      - select: "PROPERTIES_CHECKOUT_ID"
-        type: checkout_id
-        entity: user
+
       
   - name: rsOrderCompleted
     table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.ORDER_COMPLETED
@@ -29,9 +17,7 @@ inputs:
       - select: "user_id"
         type: user_id
         entity: user
-      - select: "PROPERTIES_CHECKOUT_ID"
-        type: checkout_id
-        entity: user
+
    
   
   - name: rsProductAdded
@@ -41,29 +27,7 @@ inputs:
       - select: "user_id"
         type: user_id
         entity: user
-      - select: "PROPERTIES_CART_ID"
-        type: cart_id
-        entity: user
+
      
 
-  - name: rsTracks
-    table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.TRACKS
-    occurred_at_col: timestamp
-    ids:
-      - select: "user_id"
-        type: user_id
-        entity: user
-      - select: "anonymous_id"
-        type: anonymous_id
-        entity: user
-  - name: rsPages
-    table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.PAGES
-    occurred_at_col: timestamp
-    ids:
-      - select: "user_id"
-        type: user_id
-        entity: user
-      - select: "anonymous_id"
-        type: anonymous_id
-        entity: user
   
