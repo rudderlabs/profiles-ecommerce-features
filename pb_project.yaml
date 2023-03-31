@@ -20,7 +20,6 @@ entities:
   - name: user
     id_stitcher: models/rudder_user_id_stitcher
     id_types:
-      - main_id
       - user_id
       - anonymous_id
       - checkout_id
@@ -28,7 +27,6 @@ entities:
 
 
 id_types:
-  - name: main_id
   - name: user_id
   - name: checkout_id
   - name: cart_id
