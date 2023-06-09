@@ -16,6 +16,17 @@ models:
     model_spec:
       validity_time: 24h # 1 day      
       entity_key: user
+      macros:
+        - name: macro_datediff
+          inputs: 
+            - column
+          value: "{% if !(end_time|isnil) %} datediff(day, date({{column}}::timestamp), date('{{end_time.Format(\"2006-01-02 15:04:05\")}}')) {% else %} datediff(day, date({{column}}::timestamp), GETDATE()) {% endif %}"
+        - name: macro_datediff_n
+          inputs: 
+            - column
+            - number_of_days
+          value: "{% if !(end_time|isnil) %} datediff(day, date({{column}}), date('{{end_time.Format(\"2006-01-02 15:04:05\")}}')) <={{number_of_days}} {% else %} datediff(day, date({{column}}), GETDATE()) <= {{number_of_days}} {% endif %}"
+
       vars:
         #last_transaction_value
         - entity_var:
@@ -63,7 +74,7 @@ models:
             name: transactions_in_past_90_days
             select: count(*)::real
             from: inputs/rsOrderCompleted
-            where: datediff(day,date(timestamp),date('{{timestamp.Format("2006-01-02 15:04:05")}}'))<=90
+            where: "{{macro_datediff_n('timestamp','90')}}"
             description:  Number of transactions in last 90 day
 
         #days_since_last_purchase
@@ -75,7 +86,7 @@ models:
         
         - entity_var:
             name: days_since_last_purchase
-            select: datediff(day, date(max_timestamp_order_created), date('{{timestamp.Format("2006-01-02 15:04:05")}}'))
+            select: "{{macro_datediff('max_timestamp_order_created')}}"
         #total_transactions
         - entity_var:
             name: total_transactions
@@ -96,7 +107,7 @@ models:
 
         - entity_var:
             name: days_since_first_purchase
-            select: datediff(day, date(min_timestamp_order_created), date('{{timestamp.Format("2006-01-02 15:04:05")}}'))
+            select: "{{macro_datediff('min_timestamp_order_created')}}"
             description: Number of days since the user purchased the first product
 
         #gross_amt_spent_in_past
@@ -118,7 +129,8 @@ models:
             name: carts_in_past_365_days
             select: count(distinct PROPERTIES_CART_ID)
             from: inputs/rsProductAdded
-            where:  datediff(day,date(timestamp),date('{{timestamp.Format("2006-01-02 15:04:05")}}')) <= 365
+            where: "{{macro_datediff_n('timestamp','365')}}"
+
             description: A cart id is created for events such as create_cart,update_cart. This coln specifies how many cart ids were created in the past 365 days
 
 
@@ -134,7 +146,8 @@ models:
             name: products_added_in_past_365_days
             select: array_agg(distinct PROPERTIES_PRODUCT_ID)
             from: inputs/rsProductAdded
-            where: datediff(day, date(timestamp), date('{{timestamp.Format("2006-01-02 15:04:05")}}')) <= 365
+            where: "{{macro_datediff_n('timestamp','365')}}"
+
             description: List of products added to cart by the user in last 7 days. (array with list of all product ids). It includes all purchased products plus current active cart.
 
     
@@ -154,7 +167,8 @@ models:
         #days_since_last_cart_add
         - entity_var:
             name: days_since_last_cart_add
-            select: datediff(day, date(max_timestamp_product_added), date('{{timestamp.Format("2006-01-02 15:04:05")}}'))
+            select: "{{macro_datediff('max_timestamp_product_added')}}"
+
             description: Number of days since the user has added a product to cart
 
        
