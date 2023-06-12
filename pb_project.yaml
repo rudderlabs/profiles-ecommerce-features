@@ -12,9 +12,9 @@ connection: ecommerce_featues
 include_untimed: true
 
 # Model folders to use.
-model_folders: 
+model_folders:
   - models
- 
+
 # Entities in this project and their ids.
 entities:
   - name: user
@@ -25,12 +25,10 @@ entities:
       - checkout_id
       - cart_id
 
-
 id_types:
   - name: user_id
   - name: checkout_id
   - name: cart_id
-  
   - name: anonymous_id
     filters:
       - type: exclude

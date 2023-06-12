@@ -10,9 +10,8 @@ models:
         {% with OrderCreated = this.DeRef("inputs/rsOrderCompleted") %}
             select t.value['sku'] as sku,USER_ID,TIMESTAMP,PROPERTIES_CHECKOUT_ID
             from (select * from {{OrderCreated}} ), table(flatten(parse_json(PROPERTIES_PRODUCTS))) t where PROPERTIES_PRODUCTS is not null
-            
             {% endwith %}
-     
+
   - name: rsItemsPurchasedEverCte
     model_type: sql_template
     model_spec:
@@ -22,12 +21,10 @@ models:
         run_type: discrete
       single_sql: |
         {% with sku = this.DeRef("models/rsItemsPurchasedEverSku") %}
-     
             SELECT *, row_number() OVER (PARTITION BY PROPERTIES_CHECKOUT_ID ORDER BY timestamp DESC) AS rn
             FROM   {{sku}}
-          
             {% endwith %}
-  
+
   - name: rsItemsPurchasedEver
     model_type: sql_template
     model_spec:
@@ -37,7 +34,6 @@ models:
         run_type: discrete
       single_sql: |
          {% with cte = this.DeRef("models/rsItemsPurchasedEverCte") %}
-
             SELECT *
             FROM   {{cte}}
             WHERE  rn = 1
