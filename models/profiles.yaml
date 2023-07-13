@@ -56,6 +56,9 @@ models:
         - entity_var:
             name: highest_transaction_value
             select: max(PROPERTIES_REVENUE ::real)
+            window:
+                order_by:
+                - timestamp
             from: inputs/rsOrderCompleted
             description: Of all the transactions done by the user, this features contains the highest transaction value.
 
@@ -77,11 +80,17 @@ models:
         - entity_var:
             name: max_timestamp_order_created
             select: max(timestamp)
+            window:
+                order_by:
+                - timestamp
             from: inputs/rsOrderCompleted
 
         - entity_var:
             name: days_since_last_purchase
             select: "{{macro_datediff('max_timestamp_order_created')}}"
+            dependencies:
+             - max_timestamp_order_created
+
 
         #total_transactions
         - entity_var:
@@ -90,7 +99,7 @@ models:
             from: inputs/rsOrderCompleted
             description: Total number of transactions done by the user
 
-        #has credit card
+        #has_credit_card
         - entity_var:
             name: has_credit_card
             select: max(case when lower(PROPERTIES_PAYMENT_METHOD) in ('visa','american express','mastercard') then 1 else 0 end)
@@ -100,12 +109,17 @@ models:
         - entity_var:
             name: min_timestamp_order_created
             select: min(timestamp)
+            window:
+                order_by:
+                - timestamp 
             from: inputs/rsOrderCompleted
 
         - entity_var:
             name: days_since_first_purchase
             select: "{{macro_datediff('min_timestamp_order_created')}}"
             description: Number of days since the user purchased the first product
+            dependencies:
+                - min_timestamp_order_created
 
         #gross_amt_spent_in_past
         - entity_var:
@@ -155,6 +169,9 @@ models:
         - entity_var:
             name: max_timestamp_product_added
             select: max(timestamp)
+            window:
+                order_by:
+                - timestamp
             from: inputs/rsProductAdded
 
         #days_since_last_cart_add
@@ -162,6 +179,8 @@ models:
             name: days_since_last_cart_add
             select: "{{macro_datediff('max_timestamp_product_added')}}"
             description: Number of days since the user has added a product to cart
+            dependencies:
+                - max_timestamp_product_added
 
       features:
         - last_transaction_value
