@@ -56,9 +56,6 @@ models:
         - entity_var:
             name: highest_transaction_value
             select: max(PROPERTIES_REVENUE ::real)
-            window:
-                order_by:
-                - timestamp
             from: inputs/rsOrderCompleted
             description: Of all the transactions done by the user, this features contains the highest transaction value.
 
@@ -80,9 +77,6 @@ models:
         - entity_var:
             name: max_timestamp_order_created
             select: max(timestamp)
-            window:
-                order_by:
-                - timestamp
             from: inputs/rsOrderCompleted
 
         - entity_var:
@@ -109,9 +103,6 @@ models:
         - entity_var:
             name: min_timestamp_order_created
             select: min(timestamp)
-            window:
-                order_by:
-                - timestamp 
             from: inputs/rsOrderCompleted
 
         - entity_var:
@@ -169,9 +160,6 @@ models:
         - entity_var:
             name: max_timestamp_product_added
             select: max(timestamp)
-            window:
-                order_by:
-                - timestamp
             from: inputs/rsProductAdded
 
         #days_since_last_cart_add
