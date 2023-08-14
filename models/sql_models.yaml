@@ -11,7 +11,6 @@ models:
             select t.value['sku'] as sku,USER_ID,TIMESTAMP,PROPERTIES_CHECKOUT_ID
             from (select * from {{OrderCreated}} ), table(flatten(parse_json(PROPERTIES_PRODUCTS))) t where PROPERTIES_PRODUCTS is not null
             {% endwith %}
-
   - name: rsItemsPurchasedEverCte
     model_type: sql_template
     model_spec:
@@ -24,7 +23,6 @@ models:
             SELECT *, row_number() OVER (PARTITION BY PROPERTIES_CHECKOUT_ID ORDER BY timestamp DESC) AS rn
             FROM   {{sku}}
             {% endwith %}
-
   - name: rsItemsPurchasedEver
     model_type: sql_template
     model_spec:
@@ -33,12 +31,13 @@ models:
         output_type: ephemeral
         run_type: discrete
       single_sql: |
-         {% with cte = this.DeRef("models/rsItemsPurchasedEverCte") %}
-            SELECT *
-            FROM   {{cte}}
-            WHERE  rn = 1
-            {% endwith %}
+        {% with cte = this.DeRef("models/rsItemsPurchasedEverCte") %}
+           SELECT *
+           FROM   {{cte}}
+           WHERE  rn = 1
+           {% endwith %}
       ids:
-      - select: "user_id"
-        type: user_id
-        entity: user
+        - select: "user_id"
+          type: user_id
+          entity: user
+          to_default_stitcher: true
