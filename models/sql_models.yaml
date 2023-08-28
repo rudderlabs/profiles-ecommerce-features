@@ -11,6 +11,11 @@ models:
             select t.value['sku'] as sku,USER_ID,TIMESTAMP,PROPERTIES_CHECKOUT_ID
             from (select * from {{OrderCreated}} ), table(flatten(parse_json(PROPERTIES_PRODUCTS))) t where PROPERTIES_PRODUCTS is not null
             {% endwith %}
+      contract:
+        is_optional: false
+        is_event_stream: false
+        with_entity_ids: []
+        with_columns: []
   - name: rsItemsPurchasedEverCte
     model_type: sql_template
     model_spec:
@@ -23,6 +28,11 @@ models:
             SELECT *, row_number() OVER (PARTITION BY PROPERTIES_CHECKOUT_ID ORDER BY timestamp DESC) AS rn
             FROM   {{sku}}
             {% endwith %}
+      contract:
+        is_optional: false
+        is_event_stream: false
+        with_entity_ids: []
+        with_columns: []
   - name: rsItemsPurchasedEver
     model_type: sql_template
     model_spec:
@@ -41,3 +51,10 @@ models:
           type: user_id
           entity: user
           to_default_stitcher: true
+      contract:
+        is_optional: false
+        is_event_stream: false
+        with_entity_ids:
+          - user
+        with_columns:
+          - name: user_id
