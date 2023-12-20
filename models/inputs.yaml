@@ -16,7 +16,6 @@ inputs:
         - select: "user_id"
           type: user_id
           entity: user
-          to_default_stitcher: true
   - name: rsOrderCompleted
     contract:
       is_optional: false
@@ -33,7 +32,6 @@ inputs:
         - select: "user_id"
           type: user_id
           entity: user
-          to_default_stitcher: true
   - name: rsProductAdded
     contract:
       is_optional: false
@@ -50,4 +48,3 @@ inputs:
         - select: "user_id"
           type: user_id
           entity: user
-          to_default_stitcher: true
