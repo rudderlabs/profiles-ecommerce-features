@@ -104,6 +104,19 @@ models:
             select: sum(PROPERTIES_REVENUE::real)
             from: inputs/rsOrderCompleted
             description: Total value of products purchased till date.
+        - entity_var:
+            name: gross_amt_spent_in_past_30_days
+            select: sum(PROPERTIES_REVENUE::real)
+            from: inputs/rsOrderCompleted
+            where: "{{macro_datediff_n('timestamp','30')}}"
+            description: Total value of products purchased till date.   
+        - entity_var:
+            name: gross_amt_spent_in_past_90_days
+            select: sum(PROPERTIES_REVENUE::real)
+            from: inputs/rsOrderCompleted
+            where: "{{macro_datediff_n('timestamp','90')}}"
+            description: Total value of products purchased till date.  
+             
         #items_purchased_ever
         - entity_var:
             name: items_purchased_ever
@@ -160,6 +173,8 @@ models:
         - has_credit_card
         - days_since_first_purchase
         - gross_amt_spent_in_past
+        - gross_amt_spent_in_past_30_days
+        - gross_amt_spent_in_past_90_days
         - items_purchased_ever
         - days_since_last_cart_add
         - total_products_added
