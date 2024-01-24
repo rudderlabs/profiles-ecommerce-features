@@ -5,7 +5,7 @@ models:
       occurred_at_col: insert_ts
       entity_key: user
       validity_time: 24h # 1 day
-      py_repo_url: git@github.com:rudderlabs/rudderstack-profiles-classifier.git
+      py_repo_url: /Users/admin/Desktop/Profiles/rudderstack_profiles_classifier
       train:
         file_extension: .json
         file_validity: 168h # If the last trained model is older than this, then the model will be trained again,
@@ -20,6 +20,7 @@ models:
             features_profiles_model: 'rudder_user_ecommerce_features' # Model name
             output_profiles_ml_model: *model_name_90_days # Name of output model based on current model to dinstinguish between multiple models
             eligible_users: 1=1
+            task: 'regression'
             inputs:
               - models/rudder_user_ecommerce_features
           preprocessing: &model_prep_configs_90_days
