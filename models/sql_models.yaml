@@ -57,3 +57,4 @@ models:
           - user
         with_columns:
           - name: user_id
+          - name: SKU
