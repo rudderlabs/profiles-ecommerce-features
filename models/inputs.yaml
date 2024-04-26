@@ -9,6 +9,7 @@ inputs:
       with_columns:
         - name: timestamp
         - name: user_id
+        - name: PROPERTIES_PAYMENT_METHOD
     app_defaults:
       table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.CHECKOUT_STEP_COMPLETED
       occurred_at_col: timestamp
@@ -25,6 +26,8 @@ inputs:
       with_columns:
         - name: timestamp
         - name: user_id
+        - name: PROPERTIES_REVENUE
+        - name: PROPERTIES_PRODUCTS
     app_defaults:
       table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.ORDER_COMPLETED
       occurred_at_col: timestamp
@@ -41,6 +44,8 @@ inputs:
       with_columns:
         - name: timestamp
         - name: user_id
+        - name: PROPERTIES_CART_ID
+        - name: PROPERTIES_PRODUCT_ID
     app_defaults:
       table: RUDDERSTACK_TEST_DB.DATA_APPS_SIMULATED_ECOMMERCE.PRODUCT_ADDED
       occurred_at_col: timestamp
