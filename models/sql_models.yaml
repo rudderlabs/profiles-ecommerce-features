@@ -2,7 +2,6 @@ models:
   - name: rsItemsPurchasedEverSku
     model_type: sql_template
     model_spec:
-      validity_time: 24h # 1 day
       materialization:
         output_type: ephemeral
         run_type: discrete
@@ -19,7 +18,6 @@ models:
   - name: rsItemsPurchasedEverCte
     model_type: sql_template
     model_spec:
-      validity_time: 24h # 1 day
       materialization:
         output_type: ephemeral
         run_type: discrete
@@ -36,7 +34,6 @@ models:
   - name: rsItemsPurchasedEver
     model_type: sql_template
     model_spec:
-      validity_time: 24h # 1 day
       materialization:
         output_type: ephemeral
         run_type: discrete

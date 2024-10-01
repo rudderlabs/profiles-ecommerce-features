@@ -2,7 +2,6 @@ models:
   - name: rudder_user_id_stitcher
     model_type: id_stitcher
     model_spec:
-      validity_time: 24h # 1 day
       entity_key: user
       edge_sources:
         # Specify from inputs.yaml file
@@ -12,7 +11,6 @@ models:
   - name: rudder_user_ecommerce_features
     model_type: feature_table_model
     model_spec:
-      validity_time: 24h # 1 day
       entity_key: user
       features:
         - last_transaction_value
